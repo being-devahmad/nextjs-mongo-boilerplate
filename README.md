@@ -76,8 +76,8 @@ Middleware is implemented in `middleware.ts` and checked in API routes before ex
 │   │   │   └── 📂 settings
 │   │   ├── 📂 (auth)
 │   │   │       └──  📂 auth
-│   │   │   │   │   │   ├── 📂 profile
-│   │   │   │   │   │   └── 📂 settings
+│   │   │   │   │   │   ├── 📂 signin
+│   │   │   │   │   │   └── 📂 signup
 │   │   ├── 📂 (user)
 │   │   │   ├── 📂 profile
 │   │   │   └── 📂 settings
