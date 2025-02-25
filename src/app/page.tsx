@@ -1,101 +1,246 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { User, Shield, Settings, LogOut } from 'lucide-react';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+interface UserData {
+  email?: string;
+  role?: string;
+}
+
+const HomePage = () => {
+  const [user, setUser] = useState<UserData | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/auth/user', {
+          credentials: 'include', // ✅ Ensure cookies are sent
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUser(null);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleLogout = async () => {
+    const response = await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include', // ✅ Ensure cookies are sent
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setUser(null);
+      console.log('User logged out');
+      router.push('/auth/signin');
+    } else {
+      console.error('Logout failed:', data.error);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
+        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
+          <h1 className="mb-6 text-3xl font-bold text-center text-gray-800">
+            Welcome
+          </h1>
+          <div className="space-y-4">
+            <button
+              onClick={() => router.push('/auth/signin')}
+              className="w-full px-4 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition flex items-center justify-center"
+            >
+              <User className="w-5 h-5 mr-2" />
+              Login
+            </button>
+            <button
+              onClick={() => router.push('/auth/signup')}
+              className="w-full px-4 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 transition flex items-center justify-center"
+            >
+              <Shield className="w-5 h-5 mr-2" />
+              Sign Up
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+    );
+  }
+
+  const isAdmin = user.role === 'admin';
+
+  return (
+    // <div
+    //   className={`min-h-screen ${
+    //     isAdmin
+    //       ? 'bg-gradient-to-r from-red-100 to-yellow-100'
+    //       : 'bg-gradient-to-r from-blue-100 to-green-100'
+    //   }`}
+    // >
+    //   <div className="container mx-auto px-4 py-8">
+    //     <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+    //       <div className={`p-6 ${isAdmin ? 'bg-red-500' : 'bg-blue-500'}`}>
+    //         <h1 className="text-3xl font-bold text-white">
+    //           Welcome, <span className="italic">{user.email}</span>!
+    //         </h1>
+    //         <p className="mt-2 text-white opacity-90">
+    //           {isAdmin ? 'Admin Dashboard' : 'User Dashboard'}
+    //         </p>
+    //       </div>
+    //       <div className="p-6">
+    //         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    //           <Link
+    //             href={isAdmin ? '/admin/dashboard' : '/user/profile'}
+    //             className={`p-6 rounded-lg shadow-md transition flex items-center ${
+    //               isAdmin
+    //                 ? 'bg-red-100 hover:bg-red-200'
+    //                 : 'bg-blue-100 hover:bg-blue-200'
+    //             }`}
+    //           >
+    //             <Shield
+    //               className={`w-8 h-8 mr-4 ${
+    //                 isAdmin ? 'text-red-500' : 'text-blue-500'
+    //               }`}
+    //             />
+    //             <div>
+    //               <h2 className="text-xl font-semibold">
+    //                 {isAdmin ? 'Admin Dashboard' : 'User Profile'}
+    //               </h2>
+    //               <p className="mt-1 text-gray-600">
+    //                 {isAdmin
+    //                   ? 'Manage your site'
+    //                   : 'View and edit your profile'}
+    //               </p>
+    //             </div>
+    //           </Link>
+    //           <Link
+    //             href={isAdmin ? '/admin/settings' : '/user/settings'}
+    //             className={`p-6 rounded-lg shadow-md transition flex items-center ${
+    //               isAdmin
+    //                 ? 'bg-yellow-100 hover:bg-yellow-200'
+    //                 : 'bg-green-100 hover:bg-green-200'
+    //             }`}
+    //           >
+    //             <Settings
+    //               className={`w-8 h-8 mr-4 ${
+    //                 isAdmin ? 'text-yellow-500' : 'text-green-500'
+    //               }`}
+    //             />
+    //             <div>
+    //               <h2 className="text-xl font-semibold">Settings</h2>
+    //               <p className="mt-1 text-gray-600">
+    //                 {isAdmin
+    //                   ? 'Configure admin settings'
+    //                   : 'Manage your account settings'}
+    //               </p>
+    //             </div>
+    //           </Link>
+    //         </div>
+    //         <button
+    //           onClick={handleLogout}
+    //           className="mt-8 w-full px-4 py-3 text-white bg-gray-500 rounded-lg hover:bg-gray-600 transition flex items-center justify-center"
+    //         >
+    //           <LogOut className="w-5 h-5 mr-2" />
+    //           Logout
+    //         </button>
+    //       </div>
+    //     </div>
+    //   </div>
+    // </div>
+
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
+        {/* Header Section */}
+        <div
+          className={` ${isAdmin ? 'bg-red-600' : 'bg-gray-900'} p-6 text-white`}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <h1 className="text-2xl font-semibold">
+            Welcome, <span className="italic">{user.email}</span>
+          </h1>
+          <p className="text-gray-300">
+            {isAdmin ? 'Admin Panel' : 'User Dashboard'}
+          </p>
+        </div>
+
+        {/* Links Section */}
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Dashboard Link */}
+            <Link
+              href={isAdmin ? '/admin/dashboard' : '/user/profile'}
+              className="flex items-center gap-4 p-4 border border-gray-300 rounded-lg transition hover:bg-gray-100"
+            >
+              <Shield className="w-6 h-6 text-gray-700" />
+              <div>
+                <h2 className="text-lg font-medium">
+                  {isAdmin ? 'Admin Dashboard' : 'User Profile'}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {isAdmin
+                    ? 'Manage site operations'
+                    : 'View and update your profile'}
+                </p>
+              </div>
+            </Link>
+
+            {/* Settings Link */}
+            <Link
+              href={isAdmin ? '/admin/settings' : '/user/settings'}
+              className="flex items-center gap-4 p-4 border border-gray-300 rounded-lg transition hover:bg-gray-100"
+            >
+              <Settings className="w-6 h-6 text-gray-700" />
+              <div>
+                <h2 className="text-lg font-medium">Settings</h2>
+                <p className="text-sm text-gray-500">
+                  {isAdmin
+                    ? 'Configure admin settings'
+                    : 'Manage account preferences'}
+                </p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white bg-gray-800 rounded-lg transition hover:bg-gray-900"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default HomePage;
+
+// import { AuthenticatedDashboard } from "@/components/layout/authenticated-dashboard";
+// import { UnauthenticatedHome } from "@/components/layout/unauthenticated";
+// import getUser from "@/utils/get-user";
+
+// export default async function HomePage() {
+//   const user = await getUser();
+//   console.log("user>", user);
+
+//   if (!user) {
+//     return <UnauthenticatedHome />;
+//   }
+
+//   return <AuthenticatedDashboard user={user} />;
+// }
